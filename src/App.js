@@ -5,7 +5,7 @@ import Vlist from './Vlist';
 function App() {
   return (
     <div className="App">
-      <Vlist itemheight={30} />
+      <Vlist itemheight={55} />
     </div>
   );
 }

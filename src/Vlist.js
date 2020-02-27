@@ -1,54 +1,58 @@
 import React from 'react';
 import Item from './Item';
 
-const data = []
-function createData(){
-	for (let i=0;i<1000000;i++){
-        data.push({name: `Row ${i}`});
-    }
-    console.log('data', data);
-}
-createData();
-
 class Vlist extends React.Component{
     constructor(props){
         super(props);
-        this.numVisibleItems=Math.trunc(300 / this.props.itemheight);
+        this.dataLength = 1000;
+        this.renderedItemsRange = 25;
+        this.numVisibleItems=Math.trunc(500 / this.props.itemheight);
         this.state={
             start:0,
-            end:this.numVisibleItems         
+            end:this.numVisibleItems,
+            data: []     
         }
-        this.containerStyle={height:data.length * this.props.itemheight}
+        this.loadDataFromServer(this.state.start, this.state.end);
+        this.containerStyle={height:this.dataLength * this.props.itemheight}
         
         this.scollPos=this.scollPos.bind(this)
     }
 
     scollPos(){
         let currentIndx=Math.trunc(this.refs.viewPort.scrollTop/this.props.itemheight)
-        currentIndx=currentIndx-this.numVisibleItems>=data.length?currentIndx-this.numVisibleItems:currentIndx;
+        currentIndx=currentIndx-this.numVisibleItems>=this.dataLength?currentIndx-this.numVisibleItems:currentIndx;
         if (currentIndx!==this.state.start){
             console.log("Redraw");
-            this.setState(
-                this.state={
-                    start:currentIndx,
-                    end:currentIndx+this.numVisibleItems>=data.length ? data.length-1:currentIndx+this.numVisibleItems
-                }
-            )
+            this.setState({...this.state,
+                start:currentIndx,
+                end:currentIndx+this.numVisibleItems>=this.dataLength ? this.dataLength-1:currentIndx+this.numVisibleItems
+            })
         }
+        this.loadDataFromServer(this.state.start, this.state.end);
     }
 
-    loadDataFromServer() {
-        
+    loadDataFromServer(start, end) {
+        setTimeout(() => {
+            const data = []
+            start = start - this.renderedItemsRange < 0 ? 0 : start - this.renderedItemsRange;
+            end = end + this.renderedItemsRange > this.dataLength ? this.dataLength - 1 : end + this.renderedItemsRange;
+            for (let i = start; i <= end; i++){
+                data.push({name: `Row ${i}`, id: i});
+            }
+            console.log('data', data);
+            this.data = data
+            this.setState({...this.state, data});
+        }, 500);
     }
     
     renderRows(){
         let result=[];
-        console.log('this.state', this.state, this);
-        for (let i=this.state.start;i<=this.state.end;i++){
-            let item=data[i];
-            result.push(<Item key={i} label={item.name} top={i*this.props.itemheight} itemheight={this.props.itemheight} />);
+        for (let i=this.state.start - this.renderedItemsRange;i<this.state.end + this.renderedItemsRange;i++){
+            let item=this.state.data.find((item) => item.id === i);
+            if (item) {
+                result.push(<Item key={i} label={item.name} top={i*this.props.itemheight} itemheight={this.props.itemheight} />);
+            }
         }
-        console.log('result', result);
         return result;
     }
     
@@ -56,7 +60,7 @@ class Vlist extends React.Component{
         return (
         <div ref="viewPort"  className="viewPort" onScroll={this.scollPos} >
             <div className="itemContainer" style={this.containerStyle}>
-                {this.renderRows()}    
+                {this.state.data.length ? this.renderRows() : null}
             </div>
         </div>)
     }
