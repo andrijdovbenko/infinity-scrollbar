@@ -5,7 +5,7 @@ class Vlist extends React.Component{
     constructor(props){
         super(props);
         this.dataLength = 1000;
-        this.renderedItemsRange = 25;
+        this.renderedItemsRange = 30;
         this.numVisibleItems=Math.trunc(500 / this.props.itemheight);
         this.state={
             start:0,
@@ -19,16 +19,14 @@ class Vlist extends React.Component{
     }
 
     scollPos(){
-        let currentIndx=Math.trunc(this.refs.viewPort.scrollTop/this.props.itemheight)
-        currentIndx=currentIndx-this.numVisibleItems>=this.dataLength?currentIndx-this.numVisibleItems:currentIndx;
-        if (currentIndx!==this.state.start){
-            console.log("Redraw");
+        let currentIndx=Math.trunc(this.refs.viewPort.scrollTop/this.props.itemheight);
+        currentIndx= currentIndx - this.numVisibleItems >= this.dataLength ? currentIndx - this.numVisibleItems:currentIndx;
+        if (currentIndx !== this.state.start){
             this.setState({...this.state,
                 start:currentIndx,
-                end:currentIndx+this.numVisibleItems>=this.dataLength ? this.dataLength-1:currentIndx+this.numVisibleItems
+                end:currentIndx+this.numVisibleItems > this.dataLength -1  ? this.dataLength-1:currentIndx+this.numVisibleItems
             })
         }
-        this.loadDataFromServer(this.state.start, this.state.end);
     }
 
     loadDataFromServer(start, end) {
@@ -39,7 +37,7 @@ class Vlist extends React.Component{
             for (let i = start; i <= end; i++){
                 data.push({name: `Row ${i}`, id: i});
             }
-            console.log('data', data);
+
             this.data = data
             this.setState({...this.state, data});
         }, 500);
@@ -54,6 +52,12 @@ class Vlist extends React.Component{
             }
         }
         return result;
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.start !== this.state.start || prevState.end !== this.state.end) {
+            this.loadDataFromServer(this.state.start, this.state.end);
+        }
     }
     
     render(){
